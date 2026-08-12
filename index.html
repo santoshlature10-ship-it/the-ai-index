@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The AI Index — A Field Catalog of AI Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1720;
+    --surface:#17222C;
+    --surface-raised:#1C2833;
+    --line: #2B3946;
+    --paper:#E9E4D8;
+    --paper-dim:#B9B2A2;
+    --amber:#D9A441;
+    --sage:#7FA37A;
+    --rust:#C4573A;
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--amber);color:var(--ink);}
+  a{color:inherit;}
+
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .wrap{max-width:1280px; margin:0 auto; padding:0 28px; position:relative; z-index:1;}
+
+  header{
+    border-bottom:1px solid var(--line);
+    padding:18px 0;
+    position:sticky; top:0;
+    background:rgba(15,23,32,0.94);
+    backdrop-filter:blur(6px);
+    z-index:50;
+  }
+  .header-inner{
+    display:flex; justify-content:space-between; align-items:center;
+    gap:20px; flex-wrap:wrap;
+  }
+  .brand-block{display:flex; align-items:baseline; gap:10px;}
+  .brand{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    font-size:24px;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    color:var(--paper);
+  }
+  .brand span{color:var(--amber);}
+  .subtitle-mono{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--paper-dim);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+  .byline{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--amber);
+    letter-spacing:0.04em;
+    margin-top:2px;
+  }
+  .search-box{
+    position:relative;
+    border:1px solid var(--line);
+    background:var(--surface);
+    border-radius:var(--radius);
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    min-width:280px;
+    transition:border-color 0.15s ease;
+  }
+  .search-box:focus-within{border-color:var(--amber);}
+  .search-box svg{flex-shrink:0; opacity:0.5;}
+  .search-box input{
+    flex:1;
+    background:none;
+    border:none;
+    outline:none;
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    padding:10px 8px;
+    width:100%;
+  }
+  .search-box input::placeholder{color:var(--paper-dim);}
+
+  .hero{
+    padding:40px 0 28px;
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:12px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    display:inline-block;
+    width:22px; height:1px;
+    background:var(--amber);
+  }
+  h1{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    font-size:clamp(32px, 4.4vw, 52px);
+    line-height:1.0;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+    max-width:820px;
+  }
+  .hero p{
+    max-width:600px;
+    color:var(--paper-dim);
+    font-size:15px;
+    line-height:1.6;
+    margin:0;
+  }
+
+  .price-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-top:20px;
+    flex-wrap:wrap;
+  }
+  .filter-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin-right:4px;
+  }
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    padding:6px 12px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:transparent;
+    color:var(--paper-dim);
+    cursor:pointer;
+    transition:all 0.15s ease;
+    white-space:nowrap;
+  }
+  .chip:hover{border-color:var(--paper-dim); color:var(--paper);}
+  .chip.active{background:var(--amber); border-color:var(--amber); color:var(--ink); font-weight:600;}
+  .chip.price-free.active{background:var(--sage); border-color:var(--sage);}
+  .chip.price-freemium.active{background:var(--amber); border-color:var(--amber);}
+  .chip.price-paid.active{background:var(--rust); border-color:var(--rust);}
+  .chip.price-favorites.active{background:var(--rust); border-color:var(--rust); color:var(--paper);}
+
+  .layout{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    gap:36px;
+    padding:32px 0 80px;
+    align-items:start;
+  }
+  .sidebar{
+    position:sticky;
+    top:150px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:14px;
+    max-height:calc(100vh - 180px);
+    overflow-y:auto;
+  }
+  .sidebar-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin-bottom:10px;
+    padding:0 6px;
+  }
+  .sidebar-link{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:8px 6px;
+    border-radius:2px;
+    font-size:13px;
+    color:var(--paper-dim);
+    text-decoration:none;
+    cursor:pointer;
+    border-left:2px solid transparent;
+  }
+  .sidebar-link:hover{color:var(--paper); background:rgba(255,255,255,0.03);}
+  .sidebar-link.active{color:var(--amber); border-left-color:var(--amber); background:rgba(217,164,65,0.06);}
+  .sidebar-link .n{font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--paper-dim);}
+
+  .count-badge{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--paper-dim);
+    margin-bottom:18px;
+  }
+  .count-badge b{color:var(--amber);}
+
+  .cat-block{margin-bottom:40px; scroll-margin-top:150px;}
+  .cat-block:last-child{margin-bottom:0;}
+  .cat-heading{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:16px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:10px;
+  }
+  .cat-heading h2{
+    font-family:'Barlow Condensed', sans-serif;
+    font-size:22px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+    margin:0;
+    color:var(--paper);
+  }
+  .cat-heading .cat-code{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--amber);
+  }
+  .cat-heading .cat-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--paper-dim);
+    margin-left:auto;
+  }
+
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:12px;
+  }
+  .card{
+    border:1px solid var(--line);
+    background:var(--surface);
+    border-radius:var(--radius);
+    padding:14px;
+    position:relative;
+    transition:border-color 0.15s ease, transform 0.15s ease;
+    display:flex;
+    flex-direction:column;
+  }
+  .card:hover{border-color:var(--paper-dim); transform:translateY(-2px);}
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:8px;
+  }
+  .card-id{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--paper-dim);
+    letter-spacing:0.05em;
+  }
+  .stamp{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:2px;
+    border:1px solid;
+    transform:rotate(-2deg);
+  }
+  .stamp.free{color:var(--sage); border-color:var(--sage); background:rgba(127,163,122,0.1);}
+  .stamp.freemium{color:var(--amber); border-color:var(--amber); background:rgba(217,164,65,0.1);}
+  .stamp.paid{color:var(--rust); border-color:var(--rust); background:rgba(196,87,58,0.1);}
+
+  .card h3{
+    font-family:'Barlow Condensed', sans-serif;
+    font-size:19px;
+    font-weight:600;
+    margin:0 0 6px;
+    color:var(--paper);
+  }
+  .card p{
+    font-size:12.5px;
+    line-height:1.5;
+    color:var(--paper-dim);
+    margin:0 0 12px;
+    flex:1;
+  }
+  .visit-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--amber);
+    text-decoration:none;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+    margin-top:auto;
+  }
+  .visit-link:hover{color:var(--paper);}
+  .visit-link svg{transition:transform 0.15s ease;}
+  .visit-link:hover svg{transform:translate(2px,-2px);}
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--paper-dim);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    display:none;
+  }
+
+  .back-to-top{
+    position:fixed;
+    bottom:24px;
+    right:24px;
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    background:var(--amber);
+    color:var(--ink);
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s ease;
+    z-index:60;
+    box-shadow:0 4px 14px rgba(0,0,0,0.4);
+  }
+  .back-to-top.show{opacity:1; pointer-events:auto;}
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:26px 0 40px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--paper-dim);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .mobile-jump{
+    display:none;
+    margin-bottom:20px;
+  }
+  .mobile-jump select{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    padding:10px 12px;
+    border-radius:var(--radius);
+  }
+
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+    .mobile-jump{display:block;}
+  }
+  @media (max-width:640px){
+    .header-inner{flex-direction:column; align-items:stretch;}
+    .search-box{min-width:0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; scroll-behavior:auto !important;}
+  }
+  :focus-visible{outline:2px solid var(--amber); outline-offset:2px;}
+
+  /* ACCOUNT */
+  #accountArea{display:flex; align-items:center;}
+  .btn-account{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    padding:9px 14px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--surface);
+    color:var(--paper);
+    cursor:pointer;
+    white-space:nowrap;
+    display:flex; align-items:center; gap:8px;
+  }
+  .btn-account:hover{border-color:var(--amber);}
+  .btn-account .dot{width:6px; height:6px; border-radius:50%; background:var(--sage);}
+  .account-modal-backdrop{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.6);
+    z-index:100;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .account-modal-backdrop.show{display:flex;}
+  .account-modal{
+    background:var(--surface-raised);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+    width:100%;
+    max-width:340px;
+  }
+  .account-input{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    font-size:14px;
+    padding:11px 12px;
+    border-radius:var(--radius);
+    outline:none;
+  }
+  .account-input:focus{border-color:var(--amber);}
+  .btn-primary{
+    flex:1;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    padding:10px 14px;
+    border:1px solid var(--amber);
+    border-radius:var(--radius);
+    background:var(--amber);
+    color:var(--ink);
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn-secondary{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    padding:10px 14px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:transparent;
+    color:var(--paper-dim);
+    cursor:pointer;
+  }
+
+  /* FAVORITES */
+  .fav-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    color:var(--paper-dim);
+    padding:0;
+    display:flex;
+    align-items:center;
+    transition:color 0.15s ease, transform 0.15s ease;
+  }
+  .fav-btn:hover{transform:scale(1.15);}
+  .fav-btn.active{color:var(--rust);}
+  .fav-btn.active svg{fill:var(--rust);}
+  .card-actions{display:flex; align-items:center; gap:10px;}
+
+  /* CHAT WIDGET */
+  .chat-fab{
+    position:fixed;
+    bottom:24px;
+    left:24px;
+    padding:12px 18px;
+    border-radius:24px;
+    background:var(--amber);
+    color:var(--ink);
+    border:none;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    z-index:60;
+    box-shadow:0 4px 14px rgba(0,0,0,0.4);
+  }
+  .chat-panel{
+    position:fixed;
+    bottom:24px;
+    left:24px;
+    width:340px;
+    max-width:calc(100vw - 40px);
+    height:460px;
+    max-height:calc(100vh - 60px);
+    background:var(--surface-raised);
+    border:1px solid var(--line);
+    border-radius:6px;
+    display:none;
+    flex-direction:column;
+    z-index:70;
+    box-shadow:0 10px 40px rgba(0,0,0,0.5);
+    overflow:hidden;
+  }
+  .chat-panel.open{display:flex;}
+  .chat-header{
+    padding:14px 16px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .chat-header-title{
+    font-family:'Barlow Condensed', sans-serif;
+    font-size:16px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+  }
+  .chat-close{
+    background:none; border:none; color:var(--paper-dim); cursor:pointer; padding:4px;
+  }
+  .chat-messages{
+    flex:1;
+    overflow-y:auto;
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .chat-msg{
+    font-size:13px;
+    line-height:1.5;
+    padding:10px 12px;
+    border-radius:6px;
+    max-width:88%;
+  }
+  .chat-msg.user{
+    align-self:flex-end;
+    background:var(--amber);
+    color:var(--ink);
+  }
+  .chat-msg.assistant{
+    align-self:flex-start;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--paper);
+  }
+  .chat-msg.assistant a{color:var(--amber);}
+  .chat-msg.typing{
+    align-self:flex-start;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--paper-dim);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+  }
+  .chat-input-row{
+    border-top:1px solid var(--line);
+    padding:10px;
+    display:flex;
+    gap:8px;
+  }
+  .chat-input-row input{
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    font-size:13px;
+    padding:10px 12px;
+    border-radius:6px;
+    outline:none;
+  }
+  .chat-input-row input:focus{border-color:var(--amber);}
+  .chat-send{
+    background:var(--amber);
+    border:none;
+    color:var(--ink);
+    border-radius:6px;
+    width:38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  @media (max-width:640px){
+    .chat-panel{left:12px; right:12px; width:auto;}
+    .chat-fab{left:12px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <div class="brand-block">
+      <div>
+        <div class="brand">The AI <span>Index</span></div>
+        <div class="subtitle-mono">a field catalog of AI tools</div>
+        <div class="byline">by Aniket Lature</div>
+      </div>
+    </div>
+    <div class="search-box">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B9B2A2" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools, categories, keywords...">
+    </div>
+    <div id="accountArea"></div>
+  </div>
+</header>
+
+<div class="account-modal-backdrop" id="accountModalBackdrop">
+  <div class="account-modal">
+    <div class="sidebar-title" style="margin-bottom:14px;">Set up your account</div>
+    <p style="font-size:12.5px; color:var(--paper-dim); line-height:1.6; margin:0 0 16px;">
+      This just gives your saved favorites a name — it's tied to your Claude.ai sign-in, not a password, and follows you across devices where you're signed in.
+    </p>
+    <input type="text" id="accountNameInput" class="account-input" placeholder="Your name" maxlength="40">
+    <div style="display:flex; gap:10px; margin-top:14px;">
+      <button class="btn-primary" id="accountSaveBtn">Save</button>
+      <button class="btn-secondary" id="accountCancelBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap hero">
+  <div class="eyebrow">Vol. 02 — Cataloged &amp; linked</div>
+  <h1>Every AI tool worth knowing, sorted, stamped, and linked.</h1>
+  <p>A browsable index of AI products across chat, image, video, code, audio and more — each one marked FREE, FREEMIUM, or PAID with a direct link to try it.</p>
+  <div class="price-row" id="categoryChips">
+    <span class="filter-label">Category</span>
+  </div>
+  <div class="price-row" id="priceChips">
+    <span class="filter-label">Pricing</span>
+  </div>
+</div>
+
+<div class="wrap layout">
+  <nav class="sidebar" id="sidebarNav">
+    <div class="sidebar-title">Jump to category</div>
+  </nav>
+
+  <div>
+    <div class="mobile-jump">
+      <select id="mobileJumpSelect"></select>
+    </div>
+    <div class="count-badge"><b id="visibleCount">0</b> / <span id="totalCount">0</span> entries shown</div>
+    <div id="catalogContainer"></div>
+    <div class="empty-state" id="emptyState">No entries match that search. Try a different term or clear filters.</div>
+  </div>
+</div>
+
+<button class="back-to-top" id="backToTop" aria-label="Back to top">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+</button>
+
+<button class="chat-fab" id="chatFab">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  Ask the Index
+</button>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <div class="chat-header-title">Ask the Index</div>
+    <button class="chat-close" id="chatClose" aria-label="Close chat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg assistant">Hi! Ask me things like "what's a free tool for editing video" or "best AI for coding" and I'll recommend something from the catalog.</div>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Ask about a tool...">
+    <button class="chat-send" id="chatSend" aria-label="Send">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px;">
+    <span>THE AI INDEX — an unofficial, community-style reference. Pricing changes often — verify on the provider's site before you commit.</span>
+    <span>Built by Aniket Lature — not affiliated with any vendor listed.</span>
+  </div>
+</footer>
+
+<script>
+const DATA = [
+  {name:"ChatGPT", cat:"Chatbots & Assistants", price:"freemium", desc:"OpenAI's general-purpose conversational assistant with browsing, voice, and image tools.", url:"https://chatgpt.com"},
+  {name:"Claude", cat:"Chatbots & Assistants", price:"freemium", desc:"Anthropic's assistant, tuned for careful reasoning, writing, and long documents.", url:"https://claude.ai"},
+  {name:"Gemini", cat:"Chatbots & Assistants", price:"freemium", desc:"Google's assistant, deeply wired into Search, Workspace, and Android.", url:"https://gemini.google.com"},
+  {name:"Microsoft Copilot", cat:"Chatbots & Assistants", price:"freemium", desc:"Microsoft's assistant embedded across Windows, Edge, and Office apps.", url:"https://copilot.microsoft.com"},
+  {name:"Perplexity", cat:"Chatbots & Assistants", price:"freemium", desc:"Answer engine that pairs chat with cited, real-time web sources.", url:"https://www.perplexity.ai"},
+  {name:"Meta AI", cat:"Chatbots & Assistants", price:"free", desc:"Meta's assistant built into WhatsApp, Instagram, and Messenger.", url:"https://www.meta.ai"},
+  {name:"Grok", cat:"Chatbots & Assistants", price:"freemium", desc:"xAI's assistant, built into X with a focus on real-time answers.", url:"https://grok.com"},
+  {name:"DeepSeek", cat:"Chatbots & Assistants", price:"free", desc:"Open-weight Chinese assistant known for strong reasoning at low cost.", url:"https://chat.deepseek.com"},
+  {name:"Pi", cat:"Chatbots & Assistants", price:"free", desc:"A more personal, conversational assistant from Inflection AI.", url:"https://pi.ai"},
+  {name:"Character.AI", cat:"Chatbots & Assistants", price:"freemium", desc:"Chat with custom AI personas and characters built by the community.", url:"https://character.ai"},
+  {name:"Poe", cat:"Chatbots & Assistants", price:"freemium", desc:"One subscription, many models — a switchboard for chatting with different AIs.", url:"https://poe.com"},
+  {name:"You.com", cat:"Chatbots & Assistants", price:"freemium", desc:"Search-first assistant that blends chat with live web results.", url:"https://you.com"},
+  {name:"Le Chat", cat:"Chatbots & Assistants", price:"freemium", desc:"Mistral AI's chatbot, fast and multilingual with a generous free tier.", url:"https://chat.mistral.ai"},
+  {name:"Phind", cat:"Chatbots & Assistants", price:"freemium", desc:"AI search engine and chatbot built specifically for developers.", url:"https://www.phind.com"},
+  {name:"Qwen Chat", cat:"Chatbots & Assistants", price:"free", desc:"Alibaba's chatbot interface for its open Qwen model family.", url:"https://chat.qwen.ai"},
+  {name:"Brave Leo", cat:"Chatbots & Assistants", price:"freemium", desc:"Privacy-focused AI assistant built directly into the Brave browser.", url:"https://brave.com/leo/"},
+  {name:"Arc Max", cat:"Chatbots & Assistants", price:"free", desc:"AI features woven into the Arc browser for summarizing and tab renaming.", url:"https://arc.net"},
+  {name:"Opera Aria", cat:"Chatbots & Assistants", price:"free", desc:"Built-in AI assistant inside the Opera browser for search and chat.", url:"https://www.opera.com"},
+
+  {name:"Midjourney", cat:"Image Generation", price:"paid", desc:"Stylized, painterly image generation known for its distinct aesthetic quality.", url:"https://www.midjourney.com"},
+  {name:"DALL·E 3", cat:"Image Generation", price:"freemium", desc:"OpenAI's image generator, accessible directly inside ChatGPT.", url:"https://openai.com/index/dall-e-3/"},
+  {name:"Adobe Firefly", cat:"Image Generation", price:"freemium", desc:"Adobe's generative image suite, trained for commercially-safe output.", url:"https://firefly.adobe.com"},
+  {name:"Stable Diffusion", cat:"Image Generation", price:"free", desc:"Open-weight image model you can self-host and fine-tune freely.", url:"https://stability.ai"},
+  {name:"Ideogram", cat:"Image Generation", price:"freemium", desc:"Image generator known for rendering legible text inside images.", url:"https://ideogram.ai"},
+  {name:"Leonardo AI", cat:"Image Generation", price:"freemium", desc:"Fine-tunable image generation aimed at game art and concept design.", url:"https://leonardo.ai"},
+  {name:"FLUX", cat:"Image Generation", price:"freemium", desc:"High-fidelity open-weight image model from Black Forest Labs.", url:"https://blackforestlabs.ai"},
+  {name:"Playground", cat:"Image Generation", price:"freemium", desc:"Fast, browser-based image generation and editing canvas.", url:"https://playground.com"},
+  {name:"Recraft", cat:"Image Generation", price:"freemium", desc:"Image and vector generation aimed at brand and product design.", url:"https://www.recraft.ai"},
+  {name:"Microsoft Designer", cat:"Image Generation", price:"freemium", desc:"Microsoft's AI design tool for social posts, graphics, and images.", url:"https://designer.microsoft.com"},
+  {name:"Dreamina", cat:"Image Generation", price:"freemium", desc:"CapCut's AI image and video generation tool.", url:"https://dreamina.capcut.com"},
+
+  {name:"Runway", cat:"Video Generation", price:"freemium", desc:"Text and image-to-video generation plus a full AI editing toolkit.", url:"https://runwayml.com"},
+  {name:"Sora", cat:"Video Generation", price:"paid", desc:"OpenAI's text-to-video model for short, cinematic clips.", url:"https://sora.chatgpt.com"},
+  {name:"Pika", cat:"Video Generation", price:"freemium", desc:"Fast, stylized short-form video generation from text or images.", url:"https://pika.art"},
+  {name:"Luma Dream Machine", cat:"Video Generation", price:"freemium", desc:"Realistic motion generation from a single prompt or image.", url:"https://lumalabs.ai/dream-machine"},
+  {name:"Synthesia", cat:"Video Generation", price:"paid", desc:"Turns scripts into videos with AI avatars and voiceover, no camera needed.", url:"https://www.synthesia.io"},
+  {name:"Kling AI", cat:"Video Generation", price:"freemium", desc:"High-motion text and image-to-video generator popular for realism.", url:"https://klingai.com"},
+  {name:"HeyGen", cat:"Video Generation", price:"freemium", desc:"AI avatar videos with lip-synced translation into other languages.", url:"https://www.heygen.com"},
+  {name:"Hailuo AI", cat:"Video Generation", price:"freemium", desc:"Text and image-to-video generator known for smooth, realistic motion.", url:"https://hailuoai.com"},
+  {name:"InVideo AI", cat:"Video Generation", price:"freemium", desc:"Turns a text prompt into a fully edited video with voiceover.", url:"https://invideo.io"},
+  {name:"CapCut AI", cat:"Video Generation", price:"freemium", desc:"CapCut's built-in AI video editing tools for social content.", url:"https://www.capcut.com"},
+  {name:"Opus Clip", cat:"Video Generation", price:"freemium", desc:"Turns long videos into short, clippable highlights automatically.", url:"https://www.opus.pro"},
+
+  {name:"GitHub Copilot", cat:"Coding", price:"freemium", desc:"In-editor code completion and chat, built into most major IDEs.", url:"https://github.com/features/copilot"},
+  {name:"Cursor", cat:"Coding", price:"freemium", desc:"An AI-native code editor built around chat-driven editing and agents.", url:"https://cursor.com"},
+  {name:"Claude Code", cat:"Coding", price:"paid", desc:"A terminal-based agent that plans, edits, and runs code across a whole repo.", url:"https://claude.com/product/claude-code"},
+  {name:"Replit", cat:"Coding", price:"freemium", desc:"Browser-based coding environment with an AI agent that builds full apps.", url:"https://replit.com"},
+  {name:"Windsurf", cat:"Coding", price:"freemium", desc:"AI-native IDE with agentic, multi-file editing built in.", url:"https://windsurf.com"},
+  {name:"v0", cat:"Coding", price:"freemium", desc:"Vercel's tool for generating UI components and full front-ends from prompts.", url:"https://v0.dev"},
+  {name:"Bolt", cat:"Coding", price:"freemium", desc:"Prompt-to-app builder that runs full-stack projects in the browser.", url:"https://bolt.new"},
+  {name:"Tabnine", cat:"Coding", price:"freemium", desc:"Privacy-focused code completion that can run fully on your own infrastructure.", url:"https://www.tabnine.com"},
+  {name:"Lovable", cat:"Coding", price:"freemium", desc:"Prompt-to-app builder that generates and deploys full web apps.", url:"https://lovable.dev"},
+  {name:"Codeium", cat:"Coding", price:"free", desc:"Free AI code completion plugin for all the major code editors.", url:"https://codeium.com"},
+  {name:"Continue.dev", cat:"Coding", price:"free", desc:"Open-source AI coding assistant you can customize and self-host.", url:"https://continue.dev"},
+
+  {name:"Grammarly", cat:"Writing", price:"freemium", desc:"Grammar, tone, and clarity checking that follows you across apps.", url:"https://www.grammarly.com"},
+  {name:"Jasper", cat:"Writing", price:"paid", desc:"Marketing-focused writing assistant for brand-consistent copy at scale.", url:"https://www.jasper.ai"},
+  {name:"Notion AI", cat:"Writing", price:"paid", desc:"Writing and summarizing built directly into Notion's docs and databases.", url:"https://www.notion.com/product/ai"},
+  {name:"Sudowrite", cat:"Writing", price:"paid", desc:"Fiction-focused writing assistant for brainstorming and drafting stories.", url:"https://www.sudowrite.com"},
+  {name:"Copy.ai", cat:"Writing", price:"freemium", desc:"Templated copywriting assistant for ads, emails, and landing pages.", url:"https://www.copy.ai"},
+  {name:"QuillBot", cat:"Writing", price:"freemium", desc:"Paraphrasing, grammar, and summarizing tool built for students and writers.", url:"https://quillbot.com"},
+  {name:"Writesonic", cat:"Writing", price:"freemium", desc:"AI writing platform aimed at SEO content, ads, and articles.", url:"https://writesonic.com"},
+  {name:"Rytr", cat:"Writing", price:"freemium", desc:"Budget-friendly AI writing assistant with dozens of content templates.", url:"https://rytr.me"},
+
+  {name:"ElevenLabs", cat:"Audio & Music", price:"freemium", desc:"Realistic text-to-speech and voice cloning for narration and dubbing.", url:"https://elevenlabs.io"},
+  {name:"Suno", cat:"Audio & Music", price:"freemium", desc:"Generates full songs — lyrics, vocals, and instrumentation — from a prompt.", url:"https://suno.com"},
+  {name:"Udio", cat:"Audio & Music", price:"freemium", desc:"Text-to-music generator focused on radio-ready, high-fidelity tracks.", url:"https://www.udio.com"},
+  {name:"Adobe Podcast", cat:"Audio & Music", price:"free", desc:"Cleans up and enhances recorded speech to studio quality.", url:"https://podcast.adobe.com"},
+  {name:"Murf AI", cat:"Audio & Music", price:"freemium", desc:"Text-to-speech voiceover generator aimed at presentations and video.", url:"https://murf.ai"},
+  {name:"LALAL.AI", cat:"Audio & Music", price:"freemium", desc:"Splits songs into isolated vocal, instrument, and drum stems.", url:"https://www.lalal.ai"},
+  {name:"Speechify", cat:"Audio & Music", price:"freemium", desc:"Text-to-speech reader that turns articles and documents into audio.", url:"https://speechify.com"},
+  {name:"PlayHT", cat:"Audio & Music", price:"freemium", desc:"Realistic AI voice generation and cloning for apps and content.", url:"https://play.ht"},
+  {name:"Resemble AI", cat:"Audio & Music", price:"paid", desc:"Voice cloning and generative audio built for developers and enterprises.", url:"https://www.resemble.ai"},
+  {name:"Kits AI", cat:"Audio & Music", price:"freemium", desc:"AI voice changer and vocal modeling built for musicians.", url:"https://kits.ai"},
+  {name:"Voicemod", cat:"Audio & Music", price:"freemium", desc:"Real-time voice changer popular for gaming and streaming.", url:"https://www.voicemod.net"},
+  {name:"Auphonic", cat:"Audio & Music", price:"freemium", desc:"Automatic audio post-production and cleanup for podcasts and voiceovers.", url:"https://auphonic.com"},
+
+  {name:"Zapier AI", cat:"Productivity & Agents", price:"freemium", desc:"Connects apps and lets AI trigger multi-step automations between them.", url:"https://zapier.com/ai"},
+  {name:"Gamma", cat:"Productivity & Agents", price:"freemium", desc:"Turns outlines or prompts into designed slide decks and docs.", url:"https://gamma.app"},
+  {name:"Otter.ai", cat:"Productivity & Agents", price:"freemium", desc:"Live meeting transcription with automatic notes and summaries.", url:"https://otter.ai"},
+  {name:"Manus", cat:"Productivity & Agents", price:"paid", desc:"General-purpose autonomous agent that completes multi-step tasks unattended.", url:"https://manus.im"},
+  {name:"Fireflies.ai", cat:"Productivity & Agents", price:"freemium", desc:"Records, transcribes, and summarizes meetings across your calendar.", url:"https://fireflies.ai"},
+  {name:"Reclaim.ai", cat:"Productivity & Agents", price:"freemium", desc:"AI calendar assistant that auto-schedules tasks and protects focus time.", url:"https://reclaim.ai"},
+  {name:"Mem AI", cat:"Productivity & Agents", price:"freemium", desc:"Self-organizing notes app that connects and resurfaces ideas automatically.", url:"https://mem.ai"},
+  {name:"Tome", cat:"Productivity & Agents", price:"freemium", desc:"AI storytelling tool for building narrative decks and pitches.", url:"https://tome.app"},
+  {name:"Beautiful.ai", cat:"Productivity & Agents", price:"freemium", desc:"Presentation software that auto-designs slides as you type.", url:"https://www.beautiful.ai"},
+  {name:"ClickUp AI", cat:"Productivity & Agents", price:"freemium", desc:"AI features layered into ClickUp's project management platform.", url:"https://clickup.com"},
+  {name:"Taskade", cat:"Productivity & Agents", price:"freemium", desc:"AI-powered task lists, docs, and workflows built for teams.", url:"https://www.taskade.com"},
+  {name:"Make", cat:"Productivity & Agents", price:"freemium", desc:"Visual automation builder for connecting apps and AI-driven workflows.", url:"https://www.make.com"},
+
+  {name:"Harvey AI", cat:"Enterprise & Legal AI", price:"paid", desc:"AI built for law firms — contract review, research, and drafting.", url:"https://www.harvey.ai"},
+  {name:"Hebbia", cat:"Enterprise & Legal AI", price:"paid", desc:"Enterprise research AI used by finance and professional services teams.", url:"https://www.hebbia.com"},
+  {name:"Glean", cat:"Enterprise & Legal AI", price:"paid", desc:"AI search across all of a company's internal tools and documents.", url:"https://www.glean.com"},
+  {name:"Amazon Q", cat:"Enterprise & Legal AI", price:"freemium", desc:"AWS's enterprise assistant for business data, code, and cloud tasks.", url:"https://aws.amazon.com/q/"},
+
+  {name:"Elicit", cat:"Search & Research", price:"freemium", desc:"Searches and summarizes academic papers to speed up literature review.", url:"https://elicit.com"},
+  {name:"Consensus", cat:"Search & Research", price:"freemium", desc:"Search engine that pulls answers directly from peer-reviewed research.", url:"https://consensus.app"},
+  {name:"NotebookLM", cat:"Search & Research", price:"free", desc:"Google's research notebook that answers questions grounded in your own sources.", url:"https://notebooklm.google"},
+  {name:"Humata AI", cat:"Search & Research", price:"freemium", desc:"Upload PDFs and ask questions to get answers with cited sources.", url:"https://www.humata.ai"},
+  {name:"AskYourPDF", cat:"Search & Research", price:"freemium", desc:"Conversational assistant for chatting directly with PDF documents.", url:"https://askyourpdf.com"},
+  {name:"SciSpace", cat:"Search & Research", price:"freemium", desc:"AI research copilot for reading, understanding, and writing papers.", url:"https://scispace.com"},
+  {name:"Scite", cat:"Search & Research", price:"paid", desc:"Shows how a paper has been cited — supportively or critically — by others.", url:"https://scite.ai"},
+  {name:"Explainpaper", cat:"Search & Research", price:"freemium", desc:"Highlight confusing parts of a paper and get a plain-language explanation.", url:"https://www.explainpaper.com"},
+  {name:"ResearchRabbit", cat:"Search & Research", price:"free", desc:"Maps citation networks to help you discover related academic papers.", url:"https://www.researchrabbit.ai"},
+  {name:"Connected Papers", cat:"Search & Research", price:"freemium", desc:"Visual graph tool for exploring how academic papers relate to each other.", url:"https://www.connectedpapers.com"},
+  {name:"OpenEvidence", cat:"Search & Research", price:"free", desc:"Clinical answer engine built for doctors, grounded in medical literature.", url:"https://www.openevidence.com"},
+  {name:"Kagi Assistant", cat:"Search & Research", price:"paid", desc:"AI assistant built into the ad-free, paid Kagi search engine.", url:"https://kagi.com"},
+
+  {name:"Canva Magic Studio", cat:"Design & 3D", price:"freemium", desc:"AI design tools layered into Canva — backgrounds, resizing, and copy.", url:"https://www.canva.com/magic-studio/"},
+  {name:"Figma AI", cat:"Design & 3D", price:"freemium", desc:"AI-assisted layout, copy, and asset generation built into Figma.", url:"https://www.figma.com/ai/"},
+  {name:"Meshy", cat:"Design & 3D", price:"freemium", desc:"Generates 3D models and textures from text or images.", url:"https://www.meshy.ai"},
+  {name:"Uizard", cat:"Design & 3D", price:"freemium", desc:"Turns sketches and prompts into clickable app and web mockups.", url:"https://uizard.io"},
+  {name:"Looka", cat:"Design & 3D", price:"paid", desc:"AI-generated logo and brand identity kits for small businesses.", url:"https://looka.com"},
+
+  {name:"DeepL", cat:"Translation & Language", price:"freemium", desc:"High-accuracy machine translation across dozens of languages.", url:"https://www.deepl.com"},
+  {name:"Google Translate", cat:"Translation & Language", price:"free", desc:"Free, ubiquitous translation with camera and conversation modes.", url:"https://translate.google.com"},
+  {name:"Duolingo Max", cat:"Translation & Language", price:"freemium", desc:"AI-powered explanations and roleplay layered onto Duolingo's lessons.", url:"https://www.duolingo.com"},
+
+  {name:"Julius AI", cat:"Data & Analytics", price:"freemium", desc:"Chat with your spreadsheets and datasets to get charts and analysis.", url:"https://julius.ai"},
+  {name:"Akkio", cat:"Data & Analytics", price:"paid", desc:"No-code predictive analytics and forecasting for business teams.", url:"https://www.akkio.com"},
+
+  {name:"Framer", cat:"Website & App Builders", price:"freemium", desc:"Generates full, editable websites from a text prompt.", url:"https://www.framer.com"},
+  {name:"Durable", cat:"Website & App Builders", price:"paid", desc:"Builds a small-business website, copy, and logo in seconds.", url:"https://durable.co"},
+  {name:"Wix AI", cat:"Website & App Builders", price:"freemium", desc:"AI site builder that creates a full website from a short brief.", url:"https://www.wix.com"},
+  {name:"Webflow AI", cat:"Website & App Builders", price:"freemium", desc:"AI features inside Webflow for copy and layout generation.", url:"https://webflow.com"},
+  {name:"Hostinger AI Builder", cat:"Website & App Builders", price:"paid", desc:"Hosting-bundled AI website builder aimed at small businesses.", url:"https://www.hostinger.com"},
+  {name:"Bubble", cat:"Website & App Builders", price:"freemium", desc:"No-code app builder with AI-assisted app generation.", url:"https://bubble.io"},
+  {name:"Softr", cat:"Website & App Builders", price:"freemium", desc:"Turns spreadsheets and databases into client-ready web apps.", url:"https://www.softr.io"},
+  {name:"Typedream", cat:"Website & App Builders", price:"freemium", desc:"Simple AI-assisted website builder for creators and startups.", url:"https://typedream.com"},
+
+  {name:"Futurepedia", cat:"AI Tool Directories", price:"free", desc:"One of the largest directories of AI tools, updated daily.", url:"https://www.futurepedia.io"},
+  {name:"There's An AI For That", cat:"AI Tool Directories", price:"free", desc:"Searchable directory for finding an AI tool for almost any task.", url:"https://theresanaiforthat.com"},
+  {name:"FutureTools", cat:"AI Tool Directories", price:"free", desc:"Curated, hand-picked directory of new AI tools.", url:"https://www.futuretools.io"},
+  {name:"AI Scout", cat:"AI Tool Directories", price:"free", desc:"Directory for discovering and comparing AI tools by category.", url:"https://aiscout.net"},
+  {name:"AI Tool Hunt", cat:"AI Tool Directories", price:"free", desc:"Searchable database of AI tools sorted by popularity.", url:"https://www.aitoolhunt.com"},
+  {name:"Toolify", cat:"AI Tool Directories", price:"free", desc:"Large AI tool directory with rankings and traffic estimates.", url:"https://www.toolify.ai"},
+  {name:"TopAI.tools", cat:"AI Tool Directories", price:"free", desc:"Directory ranking AI tools by daily user votes.", url:"https://topai.tools"},
+  {name:"Easy With AI", cat:"AI Tool Directories", price:"free", desc:"Beginner-friendly directory with guides for using AI tools.", url:"https://easywithai.com"},
+  {name:"All Things AI", cat:"AI Tool Directories", price:"free", desc:"Directory and newsletter covering new AI tool launches.", url:"https://allthingsai.com"},
+  {name:"Insidr AI Tools", cat:"AI Tool Directories", price:"free", desc:"Directory of AI tools organized by business use case.", url:"https://insidr.ai/ai-tools"},
+];
+
+const CATEGORY_ORDER = [
+  "Chatbots & Assistants",
+  "Image Generation",
+  "Video Generation",
+  "Coding",
+  "Writing",
+  "Audio & Music",
+  "Productivity & Agents",
+  "Enterprise & Legal AI",
+  "Search & Research",
+  "Design & 3D",
+  "Translation & Language",
+  "Data & Analytics",
+  "Website & App Builders",
+  "AI Tool Directories"
+];
+
+const PRICE_LABELS = {free:"Free", freemium:"Freemium", paid:"Paid"};
+
+let activeCategory = "all";
+let activePrice = "all";
+let searchTerm = "";
+
+function slug(cat){ return cat.toLowerCase().replace(/[^a-z0-9]+/g,"-"); }
+function catCode(cat){ return cat.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,3); }
+
+function buildCategoryChips(){
+  const catWrap = document.getElementById("categoryChips");
+  const allChip = document.createElement("button");
+  allChip.className = "chip active";
+  allChip.textContent = "All";
+  allChip.dataset.value = "all";
+  catWrap.appendChild(allChip);
+
+  CATEGORY_ORDER.forEach(cat=>{
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.textContent = cat;
+    chip.dataset.value = cat;
+    catWrap.appendChild(chip);
+  });
+
+  catWrap.addEventListener("click", e=>{
+    if(e.target.tagName !== "BUTTON") return;
+    activeCategory = e.target.dataset.value;
+    [...catWrap.children].forEach(c=>c.classList.toggle("active", c === e.target));
+    render();
+    setTimeout(setupScrollSpy, 50);
+  });
+}
+
+function buildPriceChips(){
+  const priceWrap = document.getElementById("priceChips");
+  const allPrice = document.createElement("button");
+  allPrice.className = "chip active";
+  allPrice.textContent = "All pricing";
+  allPrice.dataset.value = "all";
+  priceWrap.appendChild(allPrice);
+
+  ["free","freemium","paid"].forEach(p=>{
+    const chip = document.createElement("button");
+    chip.className = `chip price-${p}`;
+    chip.textContent = PRICE_LABELS[p];
+    chip.dataset.value = p;
+    priceWrap.appendChild(chip);
+  });
+
+  const favChip = document.createElement("button");
+  favChip.className = "chip price-favorites";
+  favChip.id = "favChip";
+  favChip.textContent = "★ My Favorites";
+  favChip.dataset.value = "favorites";
+  priceWrap.appendChild(favChip);
+
+  priceWrap.addEventListener("click", e=>{
+    if(e.target.tagName !== "BUTTON") return;
+    activePrice = e.target.dataset.value;
+    [...priceWrap.children].forEach(c=>c.classList.toggle("active", c === e.target));
+    render();
+  });
+}
+
+function buildSidebar(){
+  const sidebar = document.getElementById("sidebarNav");
+  const mobileSelect = document.getElementById("mobileJumpSelect");
+
+  CATEGORY_ORDER.forEach(cat=>{
+    const count = DATA.filter(d=>d.cat===cat).length;
+    const link = document.createElement("a");
+    link.className = "sidebar-link";
+    link.href = `#${slug(cat)}`;
+    link.innerHTML = `<span>${cat}</span><span class="n">${count}</span>`;
+    sidebar.appendChild(link);
+
+    const opt = document.createElement("option");
+    opt.value = `#${slug(cat)}`;
+    opt.textContent = `${cat} (${count})`;
+    mobileSelect.appendChild(opt);
+  });
+
+  mobileSelect.addEventListener("change", e=>{
+    const target = document.querySelector(e.target.value);
+    if(target) target.scrollIntoView({behavior:"smooth", block:"start"});
+  });
+}
+
+function render(){
+  const container = document.getElementById("catalogContainer");
+  const empty = document.getElementById("emptyState");
+  container.innerHTML = "";
+
+  const term = searchTerm.trim().toLowerCase();
+
+  const filtered = DATA.filter(item=>{
+    const matchesCategory = activeCategory === "all" || item.cat === activeCategory;
+    const matchesPrice = activePrice === "all" || (activePrice === "favorites" ? favorites.includes(slug(item.name)) : item.price === activePrice);
+    const matchesSearch = !term || item.name.toLowerCase().includes(term) || item.desc.toLowerCase().includes(term) || item.cat.toLowerCase().includes(term);
+    return matchesCategory && matchesPrice && matchesSearch;
+  });
+
+  document.getElementById("visibleCount").textContent = filtered.length;
+  document.getElementById("totalCount").textContent = DATA.length;
+
+  if(filtered.length === 0){
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+
+  const byCategory = {};
+  filtered.forEach(item=>{
+    if(!byCategory[item.cat]) byCategory[item.cat] = [];
+    byCategory[item.cat].push(item);
+  });
+
+  const orderedCats = CATEGORY_ORDER.filter(c => byCategory[c]);
+
+  orderedCats.forEach(cat=>{
+    const items = byCategory[cat];
+    const block = document.createElement("div");
+    block.className = "cat-block";
+    block.id = slug(cat);
+
+    const heading = document.createElement("div");
+    heading.className = "cat-heading";
+    heading.innerHTML = `
+      <span class="cat-code">${catCode(cat)}</span>
+      <h2>${cat}</h2>
+      <span class="cat-count">${items.length} ${items.length === 1 ? "entry" : "entries"}</span>
+    `;
+    block.appendChild(heading);
+
+    const cardsWrap = document.createElement("div");
+    cardsWrap.className = "cards";
+
+    items.forEach((item, i)=>{
+      const card = document.createElement("div");
+      card.className = "card";
+      const id = `${catCode(cat)}-${String(i+1).padStart(2,"0")}`;
+      const favId = slug(item.name);
+      const isFav = favorites.includes(favId);
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="card-id">${id}</span>
+          <div class="card-actions">
+            <button class="fav-btn ${isFav ? "active" : ""}" data-fav="${favId}" aria-label="Save to favorites">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="${isFav ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+            </button>
+            <span class="stamp ${item.price}">${PRICE_LABELS[item.price]}</span>
+          </div>
+        </div>
+        <h3>${item.name}</h3>
+        <p>${item.desc}</p>
+        <a class="visit-link" href="${item.url}" target="_blank" rel="noopener noreferrer">
+          Visit site
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </a>
+      `;
+      cardsWrap.appendChild(card);
+    });
+
+    block.appendChild(cardsWrap);
+    container.appendChild(block);
+  });
+}
+
+function setupScrollSpy(){
+  const links = document.querySelectorAll(".sidebar-link");
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        links.forEach(l=>l.classList.toggle("active", l.getAttribute("href") === `#${entry.target.id}`));
+      }
+    });
+  }, {rootMargin:"-160px 0px -70% 0px"});
+
+  document.querySelectorAll(".cat-block").forEach(block=>observer.observe(block));
+}
+
+document.getElementById("searchInput").addEventListener("input", e=>{
+  searchTerm = e.target.value;
+  render();
+  setTimeout(setupScrollSpy, 50);
+});
+
+const backToTop = document.getElementById("backToTop");
+window.addEventListener("scroll", ()=>{
+  backToTop.classList.toggle("show", window.scrollY > 500);
+});
+backToTop.addEventListener("click", ()=>{
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+
+// ---- FAVORITES ----
+let favorites = [];
+
+async function loadFavorites(){
+  try{
+    const res = await window.storage.get("favorites", false);
+    favorites = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    favorites = [];
+  }
+}
+
+async function saveFavorites(){
+  try{
+    await window.storage.set("favorites", JSON.stringify(favorites), false);
+  }catch(e){
+    console.error("Could not save favorites", e);
+  }
+}
+
+document.getElementById("catalogContainer").addEventListener("click", async (e)=>{
+  const btn = e.target.closest(".fav-btn");
+  if(!btn) return;
+  const favId = btn.dataset.fav;
+  if(favorites.includes(favId)){
+    favorites = favorites.filter(f=>f!==favId);
+  }else{
+    favorites.push(favId);
+  }
+  await saveFavorites();
+  render();
+});
+
+// ---- ACCOUNT ----
+let profile = null;
+
+async function loadProfile(){
+  try{
+    const res = await window.storage.get("profile", false);
+    profile = res && res.value ? JSON.parse(res.value) : null;
+  }catch(e){
+    profile = null;
+  }
+  renderAccountArea();
+}
+
+async function saveProfile(name){
+  profile = {name};
+  try{
+    await window.storage.set("profile", JSON.stringify(profile), false);
+  }catch(e){
+    console.error("Could not save profile", e);
+  }
+  renderAccountArea();
+}
+
+async function clearProfile(){
+  profile = null;
+  try{
+    await window.storage.delete("profile", false);
+  }catch(e){}
+  renderAccountArea();
+}
+
+function renderAccountArea(){
+  const area = document.getElementById("accountArea");
+  area.innerHTML = "";
+  const btn = document.createElement("button");
+  btn.className = "btn-account";
+  if(profile){
+    btn.innerHTML = `<span class="dot"></span> ${profile.name}`;
+    btn.addEventListener("click", ()=>{
+      if(confirm(`Signed in as ${profile.name}. Sign out?`)) clearProfile();
+    });
+  }else{
+    btn.textContent = "Sign in";
+    btn.addEventListener("click", openAccountModal);
+  }
+  area.appendChild(btn);
+}
+
+function openAccountModal(){
+  document.getElementById("accountModalBackdrop").classList.add("show");
+  document.getElementById("accountNameInput").value = "";
+  document.getElementById("accountNameInput").focus();
+}
+function closeAccountModal(){
+  document.getElementById("accountModalBackdrop").classList.remove("show");
+}
+document.getElementById("accountCancelBtn").addEventListener("click", closeAccountModal);
+document.getElementById("accountModalBackdrop").addEventListener("click", (e)=>{
+  if(e.target.id === "accountModalBackdrop") closeAccountModal();
+});
+document.getElementById("accountSaveBtn").addEventListener("click", async ()=>{
+  const name = document.getElementById("accountNameInput").value.trim();
+  if(!name) return;
+  await saveProfile(name);
+  closeAccountModal();
+});
+document.getElementById("accountNameInput").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") document.getElementById("accountSaveBtn").click();
+});
+
+// ---- CHAT ASSISTANT ----
+const chatFab = document.getElementById("chatFab");
+const chatPanel = document.getElementById("chatPanel");
+const chatMessages = document.getElementById("chatMessages");
+const chatInput = document.getElementById("chatInput");
+const chatSend = document.getElementById("chatSend");
+
+let chatHistory = [];
+
+chatFab.addEventListener("click", ()=>{
+  chatPanel.classList.add("open");
+  chatInput.focus();
+});
+document.getElementById("chatClose").addEventListener("click", ()=>{
+  chatPanel.classList.remove("open");
+});
+
+function appendMessage(role, text){
+  const div = document.createElement("div");
+  div.className = `chat-msg ${role}`;
+  div.textContent = text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return div;
+}
+
+async function sendChatMessage(){
+  const text = chatInput.value.trim();
+  if(!text) return;
+  chatInput.value = "";
+  appendMessage("user", text);
+  chatHistory.push({role:"user", content:text});
+
+  const typing = document.createElement("div");
+  typing.className = "chat-msg typing";
+  typing.textContent = "thinking...";
+  chatMessages.appendChild(typing);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  const catalogSummary = DATA.map(d=>`${d.name} | ${d.cat} | ${PRICE_LABELS[d.price]} | ${d.desc} | ${d.url}`).join("\n");
+  const systemPrompt = `You are a helpful assistant embedded in "The AI Index", a directory of AI tools. Only recommend tools from the catalog below. Keep answers short (2-4 sentences), mention the pricing tier (Free/Freemium/Paid), and include the tool's URL. If nothing in the catalog fits, say so honestly rather than inventing a tool.
+
+CATALOG:
+${catalogSummary}`;
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: chatHistory
+      })
+    });
+    const data = await response.json();
+    typing.remove();
+    const textBlock = (data.content || []).find(c=>c.type === "text");
+    const reply = textBlock ? textBlock.text : "Sorry, I couldn't come up with a recommendation just now.";
+    appendMessage("assistant", reply);
+    chatHistory.push({role:"assistant", content:reply});
+  }catch(err){
+    typing.remove();
+    appendMessage("assistant", "Something went wrong reaching the assistant. Please try again.");
+    console.error(err);
+  }
+}
+
+chatSend.addEventListener("click", sendChatMessage);
+chatInput.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") sendChatMessage();
+});
+
+// ---- INIT ----
+async function init(){
+  await Promise.all([loadFavorites(), loadProfile()]);
+  buildCategoryChips();
+  buildPriceChips();
+  buildSidebar();
+  render();
+  setupScrollSpy();
+}
+init();
+</script>
+
+</body>
+</html>
