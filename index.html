@@ -306,6 +306,38 @@
     margin:0 0 6px;
     color:var(--paper);
   }
+  .card-title-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .card-title-row h3{margin:0;}
+  .tool-icon{
+    width:28px;
+    height:28px;
+    border-radius:5px;
+    background:var(--surface-raised);
+    border:1px solid var(--line);
+    flex-shrink:0;
+    object-fit:contain;
+    padding:3px;
+  }
+  .tool-icon-fallback{
+    width:28px;
+    height:28px;
+    border-radius:5px;
+    background:var(--surface-raised);
+    border:1px solid var(--line);
+    flex-shrink:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:var(--amber);
+  }
   .card p{
     font-size:12.5px;
     line-height:1.5;
@@ -436,6 +468,14 @@
     padding:22px;
     width:100%;
     max-width:340px;
+    max-height:90vh;
+    overflow-y:auto;
+  }
+  #submitModalBox{max-width:420px;}
+  select.account-input{
+    -webkit-appearance:none;
+    appearance:none;
+    cursor:pointer;
   }
   .account-input{
     width:100%;
@@ -630,21 +670,51 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#B9B2A2" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="Search tools, categories, keywords...">
     </div>
+    <button class="btn-account" id="submitToolBtn" type="button">+ Submit a tool</button>
     <div id="accountArea"></div>
   </div>
 </header>
 
 <div class="account-modal-backdrop" id="accountModalBackdrop">
   <div class="account-modal">
-    <div class="sidebar-title" style="margin-bottom:14px;">Set up your account</div>
+    <div class="sidebar-title" style="margin-bottom:14px;">Sign in or create an account</div>
     <p style="font-size:12.5px; color:var(--paper-dim); line-height:1.6; margin:0 0 16px;">
-      This just gives your saved favorites a name — it's tied to your Claude.ai sign-in, not a password, and follows you across devices where you're signed in.
+      A real account, saved to the database — your favorites will follow you to any device you sign in on.
     </p>
-    <input type="text" id="accountNameInput" class="account-input" placeholder="Your name" maxlength="40">
-    <div style="display:flex; gap:10px; margin-top:14px;">
-      <button class="btn-primary" id="accountSaveBtn">Save</button>
+    <input type="email" id="accountEmailInput" class="account-input" placeholder="Email" autocomplete="email">
+    <input type="password" id="accountPasswordInput" class="account-input" placeholder="Password (6+ characters)" autocomplete="current-password" style="margin-top:10px;">
+    <div id="accountModalStatus" style="font-family:'IBM Plex Mono', monospace; font-size:11px; margin-top:10px; display:none;"></div>
+    <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+      <button class="btn-primary" id="accountLoginBtn">Log in</button>
+      <button class="btn-secondary" id="accountSignupBtn">Create account</button>
       <button class="btn-secondary" id="accountCancelBtn">Cancel</button>
     </div>
+  </div>
+</div>
+
+<div class="account-modal-backdrop" id="submitModalBackdrop">
+  <div class="account-modal" id="submitModalBox">
+    <div class="sidebar-title" style="margin-bottom:14px;">Submit a tool</div>
+    <p style="font-size:12.5px; color:var(--paper-dim); line-height:1.6; margin:0 0 16px;">
+      Know an AI tool that should be here? Send it over — submissions go straight to the site owner for review.
+    </p>
+    <form id="submitToolForm" style="display:flex; flex-direction:column; gap:10px;">
+      <input type="text" id="stName" class="account-input" placeholder="Tool name" maxlength="60" required>
+      <input type="url" id="stUrl" class="account-input" placeholder="Website URL (https://...)" required>
+      <select id="stCategory" class="account-input"></select>
+      <select id="stPricing" class="account-input">
+        <option value="free">Free</option>
+        <option value="freemium" selected>Freemium</option>
+        <option value="paid">Paid</option>
+      </select>
+      <textarea id="stDesc" class="account-input" placeholder="One-sentence description" maxlength="200" rows="3" required style="resize:vertical; font-family:'Inter',sans-serif;"></textarea>
+      <input type="email" id="stEmail" class="account-input" placeholder="Your email (optional, in case we have questions)">
+      <div id="submitStatus" style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--sage); display:none;"></div>
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button type="submit" class="btn-primary" id="submitToolSubmitBtn">Send</button>
+        <button type="button" class="btn-secondary" id="submitModalCancelBtn">Cancel</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -709,149 +779,35 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-const DATA = [
-  {name:"ChatGPT", cat:"Chatbots & Assistants", price:"freemium", desc:"OpenAI's general-purpose conversational assistant with browsing, voice, and image tools.", url:"https://chatgpt.com"},
-  {name:"Claude", cat:"Chatbots & Assistants", price:"freemium", desc:"Anthropic's assistant, tuned for careful reasoning, writing, and long documents.", url:"https://claude.ai"},
-  {name:"Gemini", cat:"Chatbots & Assistants", price:"freemium", desc:"Google's assistant, deeply wired into Search, Workspace, and Android.", url:"https://gemini.google.com"},
-  {name:"Microsoft Copilot", cat:"Chatbots & Assistants", price:"freemium", desc:"Microsoft's assistant embedded across Windows, Edge, and Office apps.", url:"https://copilot.microsoft.com"},
-  {name:"Perplexity", cat:"Chatbots & Assistants", price:"freemium", desc:"Answer engine that pairs chat with cited, real-time web sources.", url:"https://www.perplexity.ai"},
-  {name:"Meta AI", cat:"Chatbots & Assistants", price:"free", desc:"Meta's assistant built into WhatsApp, Instagram, and Messenger.", url:"https://www.meta.ai"},
-  {name:"Grok", cat:"Chatbots & Assistants", price:"freemium", desc:"xAI's assistant, built into X with a focus on real-time answers.", url:"https://grok.com"},
-  {name:"DeepSeek", cat:"Chatbots & Assistants", price:"free", desc:"Open-weight Chinese assistant known for strong reasoning at low cost.", url:"https://chat.deepseek.com"},
-  {name:"Pi", cat:"Chatbots & Assistants", price:"free", desc:"A more personal, conversational assistant from Inflection AI.", url:"https://pi.ai"},
-  {name:"Character.AI", cat:"Chatbots & Assistants", price:"freemium", desc:"Chat with custom AI personas and characters built by the community.", url:"https://character.ai"},
-  {name:"Poe", cat:"Chatbots & Assistants", price:"freemium", desc:"One subscription, many models — a switchboard for chatting with different AIs.", url:"https://poe.com"},
-  {name:"You.com", cat:"Chatbots & Assistants", price:"freemium", desc:"Search-first assistant that blends chat with live web results.", url:"https://you.com"},
-  {name:"Le Chat", cat:"Chatbots & Assistants", price:"freemium", desc:"Mistral AI's chatbot, fast and multilingual with a generous free tier.", url:"https://chat.mistral.ai"},
-  {name:"Phind", cat:"Chatbots & Assistants", price:"freemium", desc:"AI search engine and chatbot built specifically for developers.", url:"https://www.phind.com"},
-  {name:"Qwen Chat", cat:"Chatbots & Assistants", price:"free", desc:"Alibaba's chatbot interface for its open Qwen model family.", url:"https://chat.qwen.ai"},
-  {name:"Brave Leo", cat:"Chatbots & Assistants", price:"freemium", desc:"Privacy-focused AI assistant built directly into the Brave browser.", url:"https://brave.com/leo/"},
-  {name:"Arc Max", cat:"Chatbots & Assistants", price:"free", desc:"AI features woven into the Arc browser for summarizing and tab renaming.", url:"https://arc.net"},
-  {name:"Opera Aria", cat:"Chatbots & Assistants", price:"free", desc:"Built-in AI assistant inside the Opera browser for search and chat.", url:"https://www.opera.com"},
+const SUPABASE_URL = "https://ggvsccempuhgsubqrkyb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdndnNjY2VtcHVoZ3N1YnFya3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3ODM5NzMsImV4cCI6MjEwMjM1OTk3M30.zLsYgZi95tvXNTxaCCDljx8ekuQQKo-2P5GkZ3z25pw";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  {name:"Midjourney", cat:"Image Generation", price:"paid", desc:"Stylized, painterly image generation known for its distinct aesthetic quality.", url:"https://www.midjourney.com"},
-  {name:"DALL·E 3", cat:"Image Generation", price:"freemium", desc:"OpenAI's image generator, accessible directly inside ChatGPT.", url:"https://openai.com/index/dall-e-3/"},
-  {name:"Adobe Firefly", cat:"Image Generation", price:"freemium", desc:"Adobe's generative image suite, trained for commercially-safe output.", url:"https://firefly.adobe.com"},
-  {name:"Stable Diffusion", cat:"Image Generation", price:"free", desc:"Open-weight image model you can self-host and fine-tune freely.", url:"https://stability.ai"},
-  {name:"Ideogram", cat:"Image Generation", price:"freemium", desc:"Image generator known for rendering legible text inside images.", url:"https://ideogram.ai"},
-  {name:"Leonardo AI", cat:"Image Generation", price:"freemium", desc:"Fine-tunable image generation aimed at game art and concept design.", url:"https://leonardo.ai"},
-  {name:"FLUX", cat:"Image Generation", price:"freemium", desc:"High-fidelity open-weight image model from Black Forest Labs.", url:"https://blackforestlabs.ai"},
-  {name:"Playground", cat:"Image Generation", price:"freemium", desc:"Fast, browser-based image generation and editing canvas.", url:"https://playground.com"},
-  {name:"Recraft", cat:"Image Generation", price:"freemium", desc:"Image and vector generation aimed at brand and product design.", url:"https://www.recraft.ai"},
-  {name:"Microsoft Designer", cat:"Image Generation", price:"freemium", desc:"Microsoft's AI design tool for social posts, graphics, and images.", url:"https://designer.microsoft.com"},
-  {name:"Dreamina", cat:"Image Generation", price:"freemium", desc:"CapCut's AI image and video generation tool.", url:"https://dreamina.capcut.com"},
+let DATA = [];
 
-  {name:"Runway", cat:"Video Generation", price:"freemium", desc:"Text and image-to-video generation plus a full AI editing toolkit.", url:"https://runwayml.com"},
-  {name:"Sora", cat:"Video Generation", price:"paid", desc:"OpenAI's text-to-video model for short, cinematic clips.", url:"https://sora.chatgpt.com"},
-  {name:"Pika", cat:"Video Generation", price:"freemium", desc:"Fast, stylized short-form video generation from text or images.", url:"https://pika.art"},
-  {name:"Luma Dream Machine", cat:"Video Generation", price:"freemium", desc:"Realistic motion generation from a single prompt or image.", url:"https://lumalabs.ai/dream-machine"},
-  {name:"Synthesia", cat:"Video Generation", price:"paid", desc:"Turns scripts into videos with AI avatars and voiceover, no camera needed.", url:"https://www.synthesia.io"},
-  {name:"Kling AI", cat:"Video Generation", price:"freemium", desc:"High-motion text and image-to-video generator popular for realism.", url:"https://klingai.com"},
-  {name:"HeyGen", cat:"Video Generation", price:"freemium", desc:"AI avatar videos with lip-synced translation into other languages.", url:"https://www.heygen.com"},
-  {name:"Hailuo AI", cat:"Video Generation", price:"freemium", desc:"Text and image-to-video generator known for smooth, realistic motion.", url:"https://hailuoai.com"},
-  {name:"InVideo AI", cat:"Video Generation", price:"freemium", desc:"Turns a text prompt into a fully edited video with voiceover.", url:"https://invideo.io"},
-  {name:"CapCut AI", cat:"Video Generation", price:"freemium", desc:"CapCut's built-in AI video editing tools for social content.", url:"https://www.capcut.com"},
-  {name:"Opus Clip", cat:"Video Generation", price:"freemium", desc:"Turns long videos into short, clippable highlights automatically.", url:"https://www.opus.pro"},
-
-  {name:"GitHub Copilot", cat:"Coding", price:"freemium", desc:"In-editor code completion and chat, built into most major IDEs.", url:"https://github.com/features/copilot"},
-  {name:"Cursor", cat:"Coding", price:"freemium", desc:"An AI-native code editor built around chat-driven editing and agents.", url:"https://cursor.com"},
-  {name:"Claude Code", cat:"Coding", price:"paid", desc:"A terminal-based agent that plans, edits, and runs code across a whole repo.", url:"https://claude.com/product/claude-code"},
-  {name:"Replit", cat:"Coding", price:"freemium", desc:"Browser-based coding environment with an AI agent that builds full apps.", url:"https://replit.com"},
-  {name:"Windsurf", cat:"Coding", price:"freemium", desc:"AI-native IDE with agentic, multi-file editing built in.", url:"https://windsurf.com"},
-  {name:"v0", cat:"Coding", price:"freemium", desc:"Vercel's tool for generating UI components and full front-ends from prompts.", url:"https://v0.dev"},
-  {name:"Bolt", cat:"Coding", price:"freemium", desc:"Prompt-to-app builder that runs full-stack projects in the browser.", url:"https://bolt.new"},
-  {name:"Tabnine", cat:"Coding", price:"freemium", desc:"Privacy-focused code completion that can run fully on your own infrastructure.", url:"https://www.tabnine.com"},
-  {name:"Lovable", cat:"Coding", price:"freemium", desc:"Prompt-to-app builder that generates and deploys full web apps.", url:"https://lovable.dev"},
-  {name:"Codeium", cat:"Coding", price:"free", desc:"Free AI code completion plugin for all the major code editors.", url:"https://codeium.com"},
-  {name:"Continue.dev", cat:"Coding", price:"free", desc:"Open-source AI coding assistant you can customize and self-host.", url:"https://continue.dev"},
-
-  {name:"Grammarly", cat:"Writing", price:"freemium", desc:"Grammar, tone, and clarity checking that follows you across apps.", url:"https://www.grammarly.com"},
-  {name:"Jasper", cat:"Writing", price:"paid", desc:"Marketing-focused writing assistant for brand-consistent copy at scale.", url:"https://www.jasper.ai"},
-  {name:"Notion AI", cat:"Writing", price:"paid", desc:"Writing and summarizing built directly into Notion's docs and databases.", url:"https://www.notion.com/product/ai"},
-  {name:"Sudowrite", cat:"Writing", price:"paid", desc:"Fiction-focused writing assistant for brainstorming and drafting stories.", url:"https://www.sudowrite.com"},
-  {name:"Copy.ai", cat:"Writing", price:"freemium", desc:"Templated copywriting assistant for ads, emails, and landing pages.", url:"https://www.copy.ai"},
-  {name:"QuillBot", cat:"Writing", price:"freemium", desc:"Paraphrasing, grammar, and summarizing tool built for students and writers.", url:"https://quillbot.com"},
-  {name:"Writesonic", cat:"Writing", price:"freemium", desc:"AI writing platform aimed at SEO content, ads, and articles.", url:"https://writesonic.com"},
-  {name:"Rytr", cat:"Writing", price:"freemium", desc:"Budget-friendly AI writing assistant with dozens of content templates.", url:"https://rytr.me"},
-
-  {name:"ElevenLabs", cat:"Audio & Music", price:"freemium", desc:"Realistic text-to-speech and voice cloning for narration and dubbing.", url:"https://elevenlabs.io"},
-  {name:"Suno", cat:"Audio & Music", price:"freemium", desc:"Generates full songs — lyrics, vocals, and instrumentation — from a prompt.", url:"https://suno.com"},
-  {name:"Udio", cat:"Audio & Music", price:"freemium", desc:"Text-to-music generator focused on radio-ready, high-fidelity tracks.", url:"https://www.udio.com"},
-  {name:"Adobe Podcast", cat:"Audio & Music", price:"free", desc:"Cleans up and enhances recorded speech to studio quality.", url:"https://podcast.adobe.com"},
-  {name:"Murf AI", cat:"Audio & Music", price:"freemium", desc:"Text-to-speech voiceover generator aimed at presentations and video.", url:"https://murf.ai"},
-  {name:"LALAL.AI", cat:"Audio & Music", price:"freemium", desc:"Splits songs into isolated vocal, instrument, and drum stems.", url:"https://www.lalal.ai"},
-  {name:"Speechify", cat:"Audio & Music", price:"freemium", desc:"Text-to-speech reader that turns articles and documents into audio.", url:"https://speechify.com"},
-  {name:"PlayHT", cat:"Audio & Music", price:"freemium", desc:"Realistic AI voice generation and cloning for apps and content.", url:"https://play.ht"},
-  {name:"Resemble AI", cat:"Audio & Music", price:"paid", desc:"Voice cloning and generative audio built for developers and enterprises.", url:"https://www.resemble.ai"},
-  {name:"Kits AI", cat:"Audio & Music", price:"freemium", desc:"AI voice changer and vocal modeling built for musicians.", url:"https://kits.ai"},
-  {name:"Voicemod", cat:"Audio & Music", price:"freemium", desc:"Real-time voice changer popular for gaming and streaming.", url:"https://www.voicemod.net"},
-  {name:"Auphonic", cat:"Audio & Music", price:"freemium", desc:"Automatic audio post-production and cleanup for podcasts and voiceovers.", url:"https://auphonic.com"},
-
-  {name:"Zapier AI", cat:"Productivity & Agents", price:"freemium", desc:"Connects apps and lets AI trigger multi-step automations between them.", url:"https://zapier.com/ai"},
-  {name:"Gamma", cat:"Productivity & Agents", price:"freemium", desc:"Turns outlines or prompts into designed slide decks and docs.", url:"https://gamma.app"},
-  {name:"Otter.ai", cat:"Productivity & Agents", price:"freemium", desc:"Live meeting transcription with automatic notes and summaries.", url:"https://otter.ai"},
-  {name:"Manus", cat:"Productivity & Agents", price:"paid", desc:"General-purpose autonomous agent that completes multi-step tasks unattended.", url:"https://manus.im"},
-  {name:"Fireflies.ai", cat:"Productivity & Agents", price:"freemium", desc:"Records, transcribes, and summarizes meetings across your calendar.", url:"https://fireflies.ai"},
-  {name:"Reclaim.ai", cat:"Productivity & Agents", price:"freemium", desc:"AI calendar assistant that auto-schedules tasks and protects focus time.", url:"https://reclaim.ai"},
-  {name:"Mem AI", cat:"Productivity & Agents", price:"freemium", desc:"Self-organizing notes app that connects and resurfaces ideas automatically.", url:"https://mem.ai"},
-  {name:"Tome", cat:"Productivity & Agents", price:"freemium", desc:"AI storytelling tool for building narrative decks and pitches.", url:"https://tome.app"},
-  {name:"Beautiful.ai", cat:"Productivity & Agents", price:"freemium", desc:"Presentation software that auto-designs slides as you type.", url:"https://www.beautiful.ai"},
-  {name:"ClickUp AI", cat:"Productivity & Agents", price:"freemium", desc:"AI features layered into ClickUp's project management platform.", url:"https://clickup.com"},
-  {name:"Taskade", cat:"Productivity & Agents", price:"freemium", desc:"AI-powered task lists, docs, and workflows built for teams.", url:"https://www.taskade.com"},
-  {name:"Make", cat:"Productivity & Agents", price:"freemium", desc:"Visual automation builder for connecting apps and AI-driven workflows.", url:"https://www.make.com"},
-
-  {name:"Harvey AI", cat:"Enterprise & Legal AI", price:"paid", desc:"AI built for law firms — contract review, research, and drafting.", url:"https://www.harvey.ai"},
-  {name:"Hebbia", cat:"Enterprise & Legal AI", price:"paid", desc:"Enterprise research AI used by finance and professional services teams.", url:"https://www.hebbia.com"},
-  {name:"Glean", cat:"Enterprise & Legal AI", price:"paid", desc:"AI search across all of a company's internal tools and documents.", url:"https://www.glean.com"},
-  {name:"Amazon Q", cat:"Enterprise & Legal AI", price:"freemium", desc:"AWS's enterprise assistant for business data, code, and cloud tasks.", url:"https://aws.amazon.com/q/"},
-
-  {name:"Elicit", cat:"Search & Research", price:"freemium", desc:"Searches and summarizes academic papers to speed up literature review.", url:"https://elicit.com"},
-  {name:"Consensus", cat:"Search & Research", price:"freemium", desc:"Search engine that pulls answers directly from peer-reviewed research.", url:"https://consensus.app"},
-  {name:"NotebookLM", cat:"Search & Research", price:"free", desc:"Google's research notebook that answers questions grounded in your own sources.", url:"https://notebooklm.google"},
-  {name:"Humata AI", cat:"Search & Research", price:"freemium", desc:"Upload PDFs and ask questions to get answers with cited sources.", url:"https://www.humata.ai"},
-  {name:"AskYourPDF", cat:"Search & Research", price:"freemium", desc:"Conversational assistant for chatting directly with PDF documents.", url:"https://askyourpdf.com"},
-  {name:"SciSpace", cat:"Search & Research", price:"freemium", desc:"AI research copilot for reading, understanding, and writing papers.", url:"https://scispace.com"},
-  {name:"Scite", cat:"Search & Research", price:"paid", desc:"Shows how a paper has been cited — supportively or critically — by others.", url:"https://scite.ai"},
-  {name:"Explainpaper", cat:"Search & Research", price:"freemium", desc:"Highlight confusing parts of a paper and get a plain-language explanation.", url:"https://www.explainpaper.com"},
-  {name:"ResearchRabbit", cat:"Search & Research", price:"free", desc:"Maps citation networks to help you discover related academic papers.", url:"https://www.researchrabbit.ai"},
-  {name:"Connected Papers", cat:"Search & Research", price:"freemium", desc:"Visual graph tool for exploring how academic papers relate to each other.", url:"https://www.connectedpapers.com"},
-  {name:"OpenEvidence", cat:"Search & Research", price:"free", desc:"Clinical answer engine built for doctors, grounded in medical literature.", url:"https://www.openevidence.com"},
-  {name:"Kagi Assistant", cat:"Search & Research", price:"paid", desc:"AI assistant built into the ad-free, paid Kagi search engine.", url:"https://kagi.com"},
-
-  {name:"Canva Magic Studio", cat:"Design & 3D", price:"freemium", desc:"AI design tools layered into Canva — backgrounds, resizing, and copy.", url:"https://www.canva.com/magic-studio/"},
-  {name:"Figma AI", cat:"Design & 3D", price:"freemium", desc:"AI-assisted layout, copy, and asset generation built into Figma.", url:"https://www.figma.com/ai/"},
-  {name:"Meshy", cat:"Design & 3D", price:"freemium", desc:"Generates 3D models and textures from text or images.", url:"https://www.meshy.ai"},
-  {name:"Uizard", cat:"Design & 3D", price:"freemium", desc:"Turns sketches and prompts into clickable app and web mockups.", url:"https://uizard.io"},
-  {name:"Looka", cat:"Design & 3D", price:"paid", desc:"AI-generated logo and brand identity kits for small businesses.", url:"https://looka.com"},
-
-  {name:"DeepL", cat:"Translation & Language", price:"freemium", desc:"High-accuracy machine translation across dozens of languages.", url:"https://www.deepl.com"},
-  {name:"Google Translate", cat:"Translation & Language", price:"free", desc:"Free, ubiquitous translation with camera and conversation modes.", url:"https://translate.google.com"},
-  {name:"Duolingo Max", cat:"Translation & Language", price:"freemium", desc:"AI-powered explanations and roleplay layered onto Duolingo's lessons.", url:"https://www.duolingo.com"},
-
-  {name:"Julius AI", cat:"Data & Analytics", price:"freemium", desc:"Chat with your spreadsheets and datasets to get charts and analysis.", url:"https://julius.ai"},
-  {name:"Akkio", cat:"Data & Analytics", price:"paid", desc:"No-code predictive analytics and forecasting for business teams.", url:"https://www.akkio.com"},
-
-  {name:"Framer", cat:"Website & App Builders", price:"freemium", desc:"Generates full, editable websites from a text prompt.", url:"https://www.framer.com"},
-  {name:"Durable", cat:"Website & App Builders", price:"paid", desc:"Builds a small-business website, copy, and logo in seconds.", url:"https://durable.co"},
-  {name:"Wix AI", cat:"Website & App Builders", price:"freemium", desc:"AI site builder that creates a full website from a short brief.", url:"https://www.wix.com"},
-  {name:"Webflow AI", cat:"Website & App Builders", price:"freemium", desc:"AI features inside Webflow for copy and layout generation.", url:"https://webflow.com"},
-  {name:"Hostinger AI Builder", cat:"Website & App Builders", price:"paid", desc:"Hosting-bundled AI website builder aimed at small businesses.", url:"https://www.hostinger.com"},
-  {name:"Bubble", cat:"Website & App Builders", price:"freemium", desc:"No-code app builder with AI-assisted app generation.", url:"https://bubble.io"},
-  {name:"Softr", cat:"Website & App Builders", price:"freemium", desc:"Turns spreadsheets and databases into client-ready web apps.", url:"https://www.softr.io"},
-  {name:"Typedream", cat:"Website & App Builders", price:"freemium", desc:"Simple AI-assisted website builder for creators and startups.", url:"https://typedream.com"},
-
-  {name:"Futurepedia", cat:"AI Tool Directories", price:"free", desc:"One of the largest directories of AI tools, updated daily.", url:"https://www.futurepedia.io"},
-  {name:"There's An AI For That", cat:"AI Tool Directories", price:"free", desc:"Searchable directory for finding an AI tool for almost any task.", url:"https://theresanaiforthat.com"},
-  {name:"FutureTools", cat:"AI Tool Directories", price:"free", desc:"Curated, hand-picked directory of new AI tools.", url:"https://www.futuretools.io"},
-  {name:"AI Scout", cat:"AI Tool Directories", price:"free", desc:"Directory for discovering and comparing AI tools by category.", url:"https://aiscout.net"},
-  {name:"AI Tool Hunt", cat:"AI Tool Directories", price:"free", desc:"Searchable database of AI tools sorted by popularity.", url:"https://www.aitoolhunt.com"},
-  {name:"Toolify", cat:"AI Tool Directories", price:"free", desc:"Large AI tool directory with rankings and traffic estimates.", url:"https://www.toolify.ai"},
-  {name:"TopAI.tools", cat:"AI Tool Directories", price:"free", desc:"Directory ranking AI tools by daily user votes.", url:"https://topai.tools"},
-  {name:"Easy With AI", cat:"AI Tool Directories", price:"free", desc:"Beginner-friendly directory with guides for using AI tools.", url:"https://easywithai.com"},
-  {name:"All Things AI", cat:"AI Tool Directories", price:"free", desc:"Directory and newsletter covering new AI tool launches.", url:"https://allthingsai.com"},
-  {name:"Insidr AI Tools", cat:"AI Tool Directories", price:"free", desc:"Directory of AI tools organized by business use case.", url:"https://insidr.ai/ai-tools"},
-];
+async function loadTools(){
+  const { data, error } = await sb
+    .from('tools')
+    .select('*')
+    .eq('status', 'approved')
+    .order('name');
+  if(error){
+    console.error('Failed to load tools from Supabase:', error);
+    DATA = [];
+    return false;
+  }
+  DATA = data.map(row => ({
+    id: row.id,
+    name: row.name,
+    cat: row.category,
+    price: row.price,
+    desc: row.description,
+    url: row.url
+  }));
+  return true;
+}
 
 const CATEGORY_ORDER = [
   "Chatbots & Assistants",
@@ -878,6 +834,14 @@ let searchTerm = "";
 
 function slug(cat){ return cat.toLowerCase().replace(/[^a-z0-9]+/g,"-"); }
 function catCode(cat){ return cat.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,3); }
+
+function domainOf(url){
+  try{ return new URL(url).hostname.replace(/^www\./,""); }
+  catch(e){ return ""; }
+}
+function initialsOf(name){
+  return name.replace(/[^A-Za-z0-9 ]/g,"").split(" ").filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
+}
 
 function buildCategoryChips(){
   const catWrap = document.getElementById("categoryChips");
@@ -968,7 +932,7 @@ function render(){
 
   const filtered = DATA.filter(item=>{
     const matchesCategory = activeCategory === "all" || item.cat === activeCategory;
-    const matchesPrice = activePrice === "all" || (activePrice === "favorites" ? favorites.includes(slug(item.name)) : item.price === activePrice);
+    const matchesPrice = activePrice === "all" || (activePrice === "favorites" ? favorites.includes(item.id) : item.price === activePrice);
     const matchesSearch = !term || item.name.toLowerCase().includes(term) || item.desc.toLowerCase().includes(term) || item.cat.toLowerCase().includes(term);
     return matchesCategory && matchesPrice && matchesSearch;
   });
@@ -988,7 +952,9 @@ function render(){
     byCategory[item.cat].push(item);
   });
 
-  const orderedCats = CATEGORY_ORDER.filter(c => byCategory[c]);
+  const knownCats = CATEGORY_ORDER.filter(c => byCategory[c]);
+  const extraCats = Object.keys(byCategory).filter(c => !CATEGORY_ORDER.includes(c)).sort();
+  const orderedCats = [...knownCats, ...extraCats];
 
   orderedCats.forEach(cat=>{
     const items = byCategory[cat];
@@ -1012,8 +978,10 @@ function render(){
       const card = document.createElement("div");
       card.className = "card";
       const id = `${catCode(cat)}-${String(i+1).padStart(2,"0")}`;
-      const favId = slug(item.name);
+      const favId = item.id;
       const isFav = favorites.includes(favId);
+      const domain = domainOf(item.url);
+      const initials = initialsOf(item.name);
       card.innerHTML = `
         <div class="card-top">
           <span class="card-id">${id}</span>
@@ -1024,7 +992,11 @@ function render(){
             <span class="stamp ${item.price}">${PRICE_LABELS[item.price]}</span>
           </div>
         </div>
-        <h3>${item.name}</h3>
+        <div class="card-title-row">
+          <img class="tool-icon" src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="tool-icon-fallback">${initials}</div>
+          <h3>${item.name}</h3>
+        </div>
         <p>${item.desc}</p>
         <a class="visit-link" href="${item.url}" target="_blank" rel="noopener noreferrer">
           Visit site
@@ -1066,79 +1038,60 @@ backToTop.addEventListener("click", ()=>{
   window.scrollTo({top:0, behavior:"smooth"});
 });
 
-// ---- FAVORITES ----
+// ---- CURRENT USER (real Supabase Auth) ----
+let currentUser = null;
+
+async function loadCurrentUser(){
+  const { data: { user } } = await sb.auth.getUser();
+  currentUser = user || null;
+}
+
+sb.auth.onAuthStateChange(async (event, session)=>{
+  currentUser = session?.user || null;
+  renderAccountArea();
+  await loadFavorites();
+  render();
+});
+
+// ---- FAVORITES (tied to the real logged-in user, stored in Supabase) ----
 let favorites = [];
 
 async function loadFavorites(){
-  try{
-    const res = await window.storage.get("favorites", false);
-    favorites = res && res.value ? JSON.parse(res.value) : [];
-  }catch(e){
-    favorites = [];
-  }
-}
-
-async function saveFavorites(){
-  try{
-    await window.storage.set("favorites", JSON.stringify(favorites), false);
-  }catch(e){
-    console.error("Could not save favorites", e);
-  }
+  if(!currentUser){ favorites = []; return; }
+  const { data, error } = await sb.from("favorites").select("tool_id").eq("user_id", currentUser.id);
+  favorites = error || !data ? [] : data.map(r => r.tool_id);
 }
 
 document.getElementById("catalogContainer").addEventListener("click", async (e)=>{
   const btn = e.target.closest(".fav-btn");
   if(!btn) return;
-  const favId = btn.dataset.fav;
-  if(favorites.includes(favId)){
-    favorites = favorites.filter(f=>f!==favId);
-  }else{
-    favorites.push(favId);
+  if(!currentUser){
+    openAccountModal();
+    return;
   }
-  await saveFavorites();
+  const toolId = btn.dataset.fav;
+  if(favorites.includes(toolId)){
+    favorites = favorites.filter(f => f !== toolId);
+    await sb.from("favorites").delete().match({user_id: currentUser.id, tool_id: toolId});
+  }else{
+    favorites.push(toolId);
+    await sb.from("favorites").insert({user_id: currentUser.id, tool_id: toolId});
+  }
   render();
 });
 
-// ---- ACCOUNT ----
-let profile = null;
-
-async function loadProfile(){
-  try{
-    const res = await window.storage.get("profile", false);
-    profile = res && res.value ? JSON.parse(res.value) : null;
-  }catch(e){
-    profile = null;
-  }
-  renderAccountArea();
-}
-
-async function saveProfile(name){
-  profile = {name};
-  try{
-    await window.storage.set("profile", JSON.stringify(profile), false);
-  }catch(e){
-    console.error("Could not save profile", e);
-  }
-  renderAccountArea();
-}
-
-async function clearProfile(){
-  profile = null;
-  try{
-    await window.storage.delete("profile", false);
-  }catch(e){}
-  renderAccountArea();
-}
-
+// ---- ACCOUNT (real email/password sign-up & login) ----
 function renderAccountArea(){
   const area = document.getElementById("accountArea");
   area.innerHTML = "";
   const btn = document.createElement("button");
   btn.className = "btn-account";
-  if(profile){
-    btn.innerHTML = `<span class="dot"></span> ${profile.name}`;
-    btn.addEventListener("click", ()=>{
-      if(confirm(`Signed in as ${profile.name}. Sign out?`)) clearProfile();
+  if(currentUser){
+    btn.innerHTML = `<span class="dot"></span> ${currentUser.email}`;
+    btn.addEventListener("click", async ()=>{
+      if(confirm(`Signed in as ${currentUser.email}. Sign out?`)){
+        await sb.auth.signOut();
+      }
     });
   }else{
     btn.textContent = "Sign in";
@@ -1149,8 +1102,10 @@ function renderAccountArea(){
 
 function openAccountModal(){
   document.getElementById("accountModalBackdrop").classList.add("show");
-  document.getElementById("accountNameInput").value = "";
-  document.getElementById("accountNameInput").focus();
+  document.getElementById("accountEmailInput").value = "";
+  document.getElementById("accountPasswordInput").value = "";
+  document.getElementById("accountModalStatus").style.display = "none";
+  document.getElementById("accountEmailInput").focus();
 }
 function closeAccountModal(){
   document.getElementById("accountModalBackdrop").classList.remove("show");
@@ -1159,14 +1114,105 @@ document.getElementById("accountCancelBtn").addEventListener("click", closeAccou
 document.getElementById("accountModalBackdrop").addEventListener("click", (e)=>{
   if(e.target.id === "accountModalBackdrop") closeAccountModal();
 });
-document.getElementById("accountSaveBtn").addEventListener("click", async ()=>{
-  const name = document.getElementById("accountNameInput").value.trim();
-  if(!name) return;
-  await saveProfile(name);
+
+function showAccountStatus(msg, isError){
+  const el = document.getElementById("accountModalStatus");
+  el.textContent = msg;
+  el.style.color = isError ? "var(--rust)" : "var(--sage)";
+  el.style.display = "block";
+}
+
+document.getElementById("accountLoginBtn").addEventListener("click", async ()=>{
+  const email = document.getElementById("accountEmailInput").value.trim();
+  const password = document.getElementById("accountPasswordInput").value;
+  if(!email || !password) return showAccountStatus("Enter an email and password.", true);
+  const { error } = await sb.auth.signInWithPassword({email, password});
+  if(error) return showAccountStatus(error.message, true);
   closeAccountModal();
 });
-document.getElementById("accountNameInput").addEventListener("keydown", (e)=>{
-  if(e.key === "Enter") document.getElementById("accountSaveBtn").click();
+
+document.getElementById("accountSignupBtn").addEventListener("click", async ()=>{
+  const email = document.getElementById("accountEmailInput").value.trim();
+  const password = document.getElementById("accountPasswordInput").value;
+  if(!email || !password) return showAccountStatus("Enter an email and password.", true);
+  if(password.length < 6) return showAccountStatus("Password needs at least 6 characters.", true);
+  const { data, error } = await sb.auth.signUp({email, password});
+  if(error) return showAccountStatus(error.message, true);
+  if(data.user && !data.session){
+    showAccountStatus("Check your email to confirm your account.", false);
+  }else{
+    closeAccountModal();
+  }
+});
+
+document.getElementById("accountPasswordInput").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") document.getElementById("accountLoginBtn").click();
+});
+
+// ---- SUBMIT A TOOL ----
+function populateSubmitCategorySelect(){
+  const sel = document.getElementById("stCategory");
+  sel.innerHTML = "";
+  CATEGORY_ORDER.forEach(cat=>{
+    const opt = document.createElement("option");
+    opt.value = cat;
+    opt.textContent = cat;
+    sel.appendChild(opt);
+  });
+  const otherOpt = document.createElement("option");
+  otherOpt.value = "Other / not sure";
+  otherOpt.textContent = "Other / not sure";
+  sel.appendChild(otherOpt);
+}
+
+function openSubmitModal(){
+  document.getElementById("submitModalBackdrop").classList.add("show");
+  document.getElementById("submitStatus").style.display = "none";
+  document.getElementById("submitToolForm").reset();
+  document.getElementById("stName").focus();
+}
+function closeSubmitModal(){
+  document.getElementById("submitModalBackdrop").classList.remove("show");
+}
+document.getElementById("submitToolBtn").addEventListener("click", openSubmitModal);
+document.getElementById("submitModalCancelBtn").addEventListener("click", closeSubmitModal);
+document.getElementById("submitModalBackdrop").addEventListener("click", (e)=>{
+  if(e.target.id === "submitModalBackdrop") closeSubmitModal();
+});
+
+document.getElementById("submitToolForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const submitBtn = document.getElementById("submitToolSubmitBtn");
+  const status = document.getElementById("submitStatus");
+  const payload = {
+    name: document.getElementById("stName").value.trim(),
+    url: document.getElementById("stUrl").value.trim(),
+    category: document.getElementById("stCategory").value,
+    price: document.getElementById("stPricing").value,
+    description: document.getElementById("stDesc").value.trim(),
+    submitted_by: document.getElementById("stEmail").value.trim() || null,
+    status: "pending"
+  };
+
+  submitBtn.textContent = "Sending...";
+  submitBtn.disabled = true;
+
+  const { error } = await sb.from("tools").insert(payload);
+
+  if(!error){
+    status.textContent = "Thanks! Your submission was sent for review.";
+    status.style.color = "var(--sage)";
+    status.style.display = "block";
+    document.getElementById("submitToolForm").reset();
+    setTimeout(closeSubmitModal, 1800);
+  }else{
+    status.textContent = "Something went wrong — try again in a moment.";
+    status.style.color = "var(--rust)";
+    status.style.display = "block";
+    console.error(error);
+  }
+  submitBtn.textContent = "Send";
+  submitBtn.disabled = false;
 });
 
 // ---- CHAT ASSISTANT ----
@@ -1245,12 +1291,24 @@ chatInput.addEventListener("keydown", (e)=>{
 
 // ---- INIT ----
 async function init(){
-  await Promise.all([loadFavorites(), loadProfile()]);
+  const container = document.getElementById("catalogContainer");
+  container.innerHTML = `<div class="empty-state" style="display:block;">Loading catalog…</div>`;
+
+  const ok = await loadTools();
+  await loadCurrentUser();
+  await loadFavorites();
+
   buildCategoryChips();
   buildPriceChips();
   buildSidebar();
+  populateSubmitCategorySelect();
+  renderAccountArea();
   render();
   setupScrollSpy();
+
+  if(!ok){
+    container.innerHTML = `<div class="empty-state" style="display:block;">Couldn't load the catalog right now. If this is a fresh Supabase project, it may need a moment to wake up — try refreshing in a bit.</div>`;
+  }
 }
 init();
 </script>
